@@ -1,3 +1,4 @@
+import { getPrisma } from "@/libs/getPrisma";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
@@ -8,14 +9,22 @@ import { NextResponse } from "next/server";
 export const POST = async (request) => {
   const body = await request.json();
   const { username, password } = body;
+  const prisma = getPrisma();
 
-  return NextResponse.json(
-    {
-      ok: false,
-      message: "Username or password is incorrect",
+  const user = await prisma.user.findFirst({
+    where: {
+      username: username,
     },
-    { status: 400 }
-  );
+  });
+  if (!user || !bcrypt.compareSync(password, user.password)) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Username or password is incorrect",
+      },
+      { status: 400 }
+    );
+  }
 
   //read in db here
 
